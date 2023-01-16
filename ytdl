@@ -1,0 +1,61 @@
+#! /bin/sh
+TXT_B='\033[1;37m'
+TXT_R='\033[1;31m'
+TXT_G='\033[1;32m'
+TXT_Y='\033[1;33m'
+TXT_N='\033[0m'
+AudioFormats=( mp3 wav opus ogg )
+VideoFormats=( mp4 webm mov 3gp )
+
+Format="mp3"
+DlArgs="--force-keyframes-at-cuts"
+Time="0:00-inf"
+URL=""
+OutputFile=""
+while getopts 'u:t:o:f:' OPTION; do
+  case "$OPTION" in
+    u)
+      URL="$OPTARG"
+      ;;
+    t)
+      Time="$OPTARG"
+      ;;
+    o)
+      OutputFile="$OPTARG"
+      ;;
+    f)
+      Format="$OPTARG"
+    ;;
+    ?)
+      echo "Usage: $(basename \$0) -u url [-t start-finish] [-f format] [-o output]" >&2
+      exit 1
+      ;;
+  esac
+done
+
+if [[ -z $URL ]]
+then
+    echo -e "${TXT_R}No URL provided. Please pass the video ID/URL with the ${TXT_B}-u${TXT_R} flag${TXT_N}"
+    exit 1
+fi
+
+if [[ -z $Time ]]
+then
+    echo -e "${TXT_Y}-t value not given, downloading full video.${TXT_N}"
+    Time="0:00-inf"
+fi
+if [[ -n $OutputFile ]]
+then
+    DlArgs="$DlArgs -o \"$OutputFile\""
+else
+    echo -e "${TXT_Y}-o value not given, using default output${TXT_N}"
+fi
+
+if [[ " ${AudioFormats[*]} " =~ " ${Format} " ]]; then
+    DlArgs="$DlArgs -x --audio-format $Format"
+elif [[ " ${VideoFormats[*]} " =~ " ${Format} " ]]; then
+    DlArgs="$DlArgs --format $Format"
+fi
+echo "yt-dlp ${DlArgs} ${URL}"
+yt-dlp ${DlArgs} ${URL}
+echo -e "${TXT_G}Done!${TXT_N}"
